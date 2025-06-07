@@ -10,6 +10,8 @@ import qrcode
 from io import BytesIO
 from django.core.files.base import ContentFile
 
+from .models import Attending
+
 from .serializers import ShortenedLinkApi
 from .models import ShortenedLink
 
@@ -62,7 +64,25 @@ def redirect_original(request, short_code):
         if link.expires_at and timezone.now() > link.expires_at:
             return HttpResponse("Посилання неактивне", status=410)
 
+        ip = get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+        Attending.objects.create(
+            link=link,
+            ip_address=ip,
+            user_agent=user_agent
+        )
+
         return HttpResponseRedirect(link.original_url)
 
     except ShortenedLink.DoesNotExist:
         return HttpResponse("Посилання не знайдено", status=404)
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip

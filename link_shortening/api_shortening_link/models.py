@@ -16,3 +16,14 @@ class ShortenedLink(models.Model):
 
     def __str__(self):
         return f'{self.original_url} -> {self.short_code}'
+
+
+class Attending(models.Model):
+    link = models.ForeignKey(
+        'ShortenedLink', on_delete=models.CASCADE, related_name='visits')
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.link.short_code} - {self.ip_address} @ {self.timestamp}"
