@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Скорочення посилань</title>
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+  </head>
+  <body>
+    <h1>Скоротити посилання</h1>
+
+    <form id="shorten-form">
+      <input
+        type="url"
+        id="original_url"
+        name="original_url"
+        placeholder="Введіть URL"
+        required
+      />
+      <button type="submit">Скоротити</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+      function getCSRFToken() {
+        return document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute("content");
+      }
+
+      document
+        .getElementById("shorten-form")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const original_url = document.getElementById("original_url").value;
+
+          const response = await fetch("/api/create/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCSRFToken(),
+            },
+            body: JSON.stringify({
+              original_url: original_url,
+            }),
+          });
+
+          const resultBlock = document.getElementById("result");
+
+          if (response.ok) {
+            const data = await response.json();
+            resultBlock.innerHTML = `<p>Скорочене посилання: 
+                    <a href="/${data.short_code}" target="_blank">${window.location.origin}/${data.short_code}</a></p>`;
+          } else {
+            const errorData = await response.json();
+            resultBlock.innerHTML = `<p style="color:red;">Помилка: ${
+              errorData.error || "Невідома помилка"
+            }</p>`;
+          }
+        });
+    </script>
+  </body>
+</html>
