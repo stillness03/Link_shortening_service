@@ -6,6 +6,10 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
+
 from .serializers import ShortenedLinkApi
 from .models import ShortenedLink
 
@@ -33,6 +37,15 @@ def created_shortenedLink(request):
             original_url=original_url,
             short_code=short_code
         )
+
+        short_url = request.build_absolute_uri(f"/{short_code}")
+        qr = qrcode.make(short_url)
+        buffer = BytesIO()
+        qr.save(buffer, format='PNG')
+        buffer.seek(0)
+        file_name = f"qr_{short_code}.png"
+        link.qr_code.save(file_name, ContentFile(buffer.read()), save=True)
+
     except Exception as e:
         print("Помилка при збереженні:", e)
         return Response({'error': str(e)}, status=500)

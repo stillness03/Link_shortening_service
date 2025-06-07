@@ -20,6 +20,7 @@
     </form>
 
     <div id="result"></div>
+    <div id="qr-container" style="margin-top: 20px"></div>
 
     <script>
       function getCSRFToken() {
@@ -47,11 +48,18 @@
           });
 
           const resultBlock = document.getElementById("result");
+          const qrContainer = document.getElementById("qr-container");
 
           if (response.ok) {
             const data = await response.json();
             resultBlock.innerHTML = `<p>Скорочене посилання: 
                     <a href="/${data.short_code}" target="_blank">${window.location.origin}/${data.short_code}</a></p>`;
+            if (data.qr_code_url) {
+              qrContainer.innerHTML = `<p>QR-код:</p>
+                <img src="${data.qr_code_url}" alt="QR Code" style="max-width:200px;" />`;
+            } else {
+              qrContainer.innerHTML = "";
+            }
           } else {
             const errorData = await response.json();
             resultBlock.innerHTML = `<p style="color:red;">Помилка: ${
