@@ -4,7 +4,7 @@ from datetime import timedelta
 
 
 def get_default():
-    return timezone.now() + timedelta(minutes=3)
+    return timezone.now() + timedelta(minutes=1)
 
 
 class ShortenedLink(models.Model):

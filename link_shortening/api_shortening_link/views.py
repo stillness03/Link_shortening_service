@@ -35,10 +35,14 @@ def created_shortenedLink(request):
         short_code = get_random_string(6)
 
     try:
-        link = ShortenedLink.objects.create(
-            original_url=original_url,
-            short_code=short_code
-        )
+        link_data = {
+            'original_url': original_url,
+            'short_code': short_code
+        }
+        if expires_at:
+            link_data['expires_at'] = expires_at
+
+        link = ShortenedLink.objects.create(**link_data)
 
         short_url = request.build_absolute_uri(f"/{short_code}")
         qr = qrcode.make(short_url)
@@ -62,7 +66,7 @@ def redirect_original(request, short_code):
         link = ShortenedLink.objects.get(short_code=short_code)
 
         if link.expires_at and timezone.now() > link.expires_at:
-            return HttpResponse("Посилання неактивне", status=410)
+            return HttpResponse("<p style='color:red;'>Силка не дійсна (протермінована)</p>", status=410)
 
         ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
@@ -76,7 +80,7 @@ def redirect_original(request, short_code):
         return HttpResponseRedirect(link.original_url)
 
     except ShortenedLink.DoesNotExist:
-        return HttpResponse("Посилання не знайдено", status=404)
+        return HttpResponse("<p style='color:red;'>Посилання не знайдено</p>", status=404)
 
 
 def get_client_ip(request):
