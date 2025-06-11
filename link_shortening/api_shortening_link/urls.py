@@ -1,9 +1,12 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import ShortenedLinkViewSet, main_page, redirect_original
 
+router = DefaultRouter()
+router.register(r'links', ShortenedLinkViewSet, basename='shortenedlink')
 
 urlpatterns = [
-    path('', views.home_page, name='home'),
-    path('api/create/', views.created_shortenedLink, name='create_link'),
-    path('<str:short_code>/', views.redirect_original, name='redirect'),
+    path('', main_page, name='main_page'),
+    path('api/', include(router.urls)),
+    path('<str:short_code>/', redirect_original, name='redirect_original')
 ]

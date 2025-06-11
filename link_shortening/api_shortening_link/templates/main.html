@@ -1,73 +1,40 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <title>Скорочення посилань</title>
-    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <title>Скорочувач посилань</title>
     <link rel="stylesheet" href="/static/css/base.css" />
   </head>
   <body>
-    <h1>Скоротити посилання</h1>
+    <div class="card">
+      <h1>Скорочення посилання</h1>
 
-    <form id="shorten-form">
-      <input
-        type="url"
-        id="original_url"
-        name="original_url"
-        placeholder="Введіть URL"
-        required
-      />
-      <button type="submit">Скоротити</button>
-    </form>
+      {% if error %}
+      <div class="error">{{ error }}</div>
+      {% endif %}
 
-    <div id="result"></div>
-    <div id="qr-container" style="margin-top: 20px"></div>
+      <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="original_url">Введіть URL:</label>
+          <input
+            type="text"
+            id="original_url"
+            name="original_url"
+            required
+            placeholder="https://example.com"
+          />
+        </div>
 
-    <script>
-      function getCSRFToken() {
-        return document
-          .querySelector('meta[name="csrf-token"]')
-          .getAttribute("content");
-      }
+        <button type="submit">Скоротити</button>
+      </form>
 
-      document
-        .getElementById("shorten-form")
-        .addEventListener("submit", async function (event) {
-          event.preventDefault();
-
-          const original_url = document.getElementById("original_url").value;
-
-          const response = await fetch("/api/create/", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRFToken": getCSRFToken(),
-            },
-            body: JSON.stringify({
-              original_url: original_url,
-            }),
-          });
-
-          const resultBlock = document.getElementById("result");
-          const qrContainer = document.getElementById("qr-container");
-
-          if (response.ok) {
-            const data = await response.json();
-            resultBlock.innerHTML = `<p>Скорочене посилання: 
-                    <a href="/${data.short_code}" target="_blank">${window.location.origin}/${data.short_code}</a></p>`;
-            if (data.qr_code_url) {
-              qrContainer.innerHTML = `<p>QR-код:</p>
-                <img src="${data.qr_code_url}" alt="QR Code" style="max-width:200px;" />`;
-            } else {
-              qrContainer.innerHTML = "";
-            }
-          } else {
-            const errorData = await response.json();
-            resultBlock.innerHTML = `<p style="color:red;">Помилка: ${
-              errorData.error || "Невідома помилка"
-            }</p>`;
-          }
-        });
-    </script>
+      {% if short_url %}
+      <div class="result">
+        <h2>Скорочене посилання:</h2>
+        <a href="{{ short_url }}">{{ short_url }}</a><br /><br />
+        <img src="{{ qr_code_url }}" alt="QR Code" />
+      </div>
+      {% endif %}
+    </div>
   </body>
 </html>
